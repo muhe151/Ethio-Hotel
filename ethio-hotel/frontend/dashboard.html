@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard — Ethio Hotel</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .dash-section table { width: 100%; border-collapse: collapse; }
+    .dash-section th, .dash-section td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
+    .dash-section th { background: #fafafa; font-size: 0.75rem; text-transform: uppercase; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <h2>🏨 Ethio Hotel</h2>
+      <a href="#" class="active" onclick="showTab('overview'); return false;">📊 Overview</a>
+      <a href="#" onclick="showTab('bookings'); return false;">📋 My Bookings</a>
+      <a href="rooms.html">🔍 Browse & Book</a>
+      <a href="contact.html">✉️ Contact</a>
+      <a id="adminLink" href="admin.html" style="display:none; color:#c9a227;">⚙️ Admin Panel</a>
+      <a href="#" onclick="logout(); return false;" style="margin-top:2rem; color:#d92424;">🚪 Logout</a>
+    </aside>
+
+    <main class="dash-main">
+      <div class="dash-header">
+        <h1 id="welcome">Loading...</h1>
+      </div>
+
+      <div id="tab-overview">
+        <div class="stats-grid">
+          <div class="stat-card"><h3>Total Bookings</h3><p id="totalBookings">0</p></div>
+          <div class="stat-card" style="border-top-color:#0d7f3f;"><h3>Confirmed</h3><p id="confirmedBookings" style="color:#0d7f3f;">0</p></div>
+          <div class="stat-card" style="border-top-color:#d92424;"><h3>Cancelled</h3><p id="cancelledBookings" style="color:#d92424;">0</p></div>
+          <div class="stat-card" style="border-top-color:#2563eb;"><h3>Total Spent</h3><p id="totalSpent" style="color:#2563eb;">0 ETB</p></div>
+        </div>
+      </div>
+
+      <div id="tab-bookings" style="display:none">
+        <div class="dash-section">
+          <h2 style="margin-bottom:1rem; font-family:'Playfair Display',serif;">All My Bookings</h2>
+          <table>
+            <thead><tr><th>Room</th><th>Check-In</th><th>Check-Out</th><th>Total</th><th>Payment</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="bookingsTable"><tr><td colspan="7" style="text-align:center;">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    let allBookings = [];
+    function showTab(name) {
+      document.querySelectorAll('.dash-sidebar a').forEach(a => a.classList.remove('active'));
+      document.querySelector(`.dash-sidebar a[onclick*="${name}"]`).classList.add('active');
+      document.querySelectorAll('[id^="tab-"]').forEach(d => d.style.display = 'none');
+      document.getElementById('tab-' + name).style.display = 'block';
+    }
+
+    async function loadDashboard() {
+      const user = await getCurrentUser();
+      if (!user) return location.href = 'login.html';
+      document.getElementById('welcome').textContent = `Welcome back, ${user.name}! 👋`;
+      if (user.role === 'admin') document.getElementById('adminLink').style.display = 'block';
+
+      try { allBookings = await apiFetch('/bookings/my'); } catch { allBookings = []; }
+
+      const confirmed = allBookings.filter(b => b.status === 'confirmed').length;
+      const cancelled = allBookings.filter(b => b.status === 'cancelled').length;
+      const spent = allBookings.filter(b => b.paymentStatus === 'paid').reduce((s, b) => s + b.totalPrice, 0);
+
+      document.getElementById('totalBookings').textContent = allBookings.length;
+      document.getElementById('confirmedBookings').textContent = confirmed;
+      document.getElementById('cancelledBookings').textContent = cancelled;
+      document.getElementById('totalSpent').textContent = spent.toLocaleString() + ' ETB';
+
+      const tbody = document.getElementById('bookingsTable');
+      if (!allBookings.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#888;">No bookings yet. <a href="rooms.html">Browse rooms →</a></td></tr>'; return; }
+      
+      tbody.innerHTML = allBookings.map(b => {
+        const canCancel = b.status === 'pending' || b.status === 'confirmed';
+        const statusColor = b.status === 'confirmed' ? '#078930' : b.status === 'cancelled' ? '#da121a' : '#b8860b';
+        return `
+          <tr>
+            <td><strong>${b.room ? b.room.name : 'N/A'}</strong></td>
+            <td>${new Date(b.checkIn).toLocaleDateString()}</td>
+            <td>${new Date(b.checkOut).toLocaleDateString()}</td>
+            <td>${b.totalPrice.toLocaleString()} ETB</td>
+            <td><span class="badge ${b.paymentMethod === 'cash' ? 'badge-available' : 'badge-limited'}">${b.paymentMethod.toUpperCase()}</span></td>
+            <td><span style="color:${statusColor};font-weight:600">${b.status.toUpperCase()}</span></td>
+            <td>
+              <a href="receipt.html?id=${b._id}" class="btn btn-sm" style="padding:.3rem .7rem;font-size:.8rem; background:#f4f4f4; color:#333;">Receipt</a>
+              ${canCancel ? `<button onclick="cancelBooking('${b._id}')" class="btn btn-sm" style="padding:.3rem .7rem;font-size:.8rem; background:#d92424; color:#fff; margin-left:.3rem;">Cancel</button>` : ''}
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    async function cancelBooking(id) {
+      if (!confirm('Cancel this booking?')) return;
+      try { await apiFetch(`/bookings/${id}/cancel`, { method: 'PUT' }); location.reload(); }
+      catch (err) { alert('Failed: ' + err.message); }
+    }
+    loadDashboard();
+  </script>
+</body>
+</html>

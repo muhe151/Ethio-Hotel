@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Profile & Services — Ethio Hotel</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    .profile-container { max-width: 800px; margin: 4rem auto; padding: 3rem; background: #fff; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+    .profile-container h1 { font-family: 'Playfair Display', serif; color: #1a1a1a; margin-bottom: 0.5rem; font-size: 2.5rem; text-align: center; }
+    .subtitle { text-align: center; color: #888; font-size: 0.95rem; margin-bottom: 3rem; text-transform: uppercase; letter-spacing: 1px; }
+    
+    .profile-container h2 { font-family: 'Playfair Display', serif; color: #c9a227; margin-top: 2.5rem; margin-bottom: 1rem; font-size: 1.6rem; border-bottom: 2px solid #f0f0f0; padding-bottom: 0.5rem; }
+    .profile-container p { color: #555; line-height: 1.8; margin-bottom: 1rem; font-size: 1.05rem; text-align: justify; }
+    
+    /* Services Grid */
+    .services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+    .service-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: #fafafa; border-radius: 8px; border: 1px solid #eee; }
+    .service-item i { color: #c9a227; font-size: 1.5rem; margin-top: 0.2rem; }
+    .service-item h3 { font-family: 'Inter', sans-serif; font-size: 1rem; margin-bottom: 0.2rem; color: #1a1a1a; }
+    .service-item p { font-size: 0.85rem; margin: 0; color: #666; text-align: left; line-height: 1.5; }
+    
+    @media (max-width: 600px) {
+      .services-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo"><a href="index.html" style="color:inherit;text-decoration:none">🏨 Ethio Hotel</a></div>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="profile.html" style="color:#c9a227;">Our Hotel</a></li>
+      <li><a href="about.html">Dining Menu</a></li>
+      <li><a href="rooms.html">Rooms</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+    </ul>
+  </nav>
+
+  <div class="profile-container">
+    <h1>Experience Ethio Hotel</h1>
+    <div class="subtitle">A Sanctuary of Luxury in Addis Ababa</div>
+
+    <h2>Our Story</h2>
+    <p>
+      Welcome to Ethio Hotel, where traditional Ethiopian hospitality meets modern luxury. Since our founding, we have been dedicated to providing an unforgettable experience for both business and leisure travelers. Nestled in the vibrant Bole district of Addis Ababa, our hotel offers stunning panoramic views of the city skyline and is just minutes away from the international airport.
+    </p>
+    <p>
+      Our rooms are meticulously designed to blend comfort with elegance, featuring premium linens, high-speed Wi-Fi, and 24/7 room service. Whether you are here for a quick layover or an extended vacation, our dedicated staff is committed to making your stay as comfortable and memorable as possible. Experience the rich flavors of our local cuisine, relax by our rooftop pool, and let us take care of the details while you focus on what matters most.
+    </p>
+
+    <h2>Our Premium Services</h2>
+    <p>We are proud to offer a wide range of amenities to make your stay exceptional:</p>
+    
+    <div class="services-grid">
+      <div class="service-item">
+        <i class="fas fa-wifi"></i>
+        <div>
+          <h3>High-Speed Wi-Fi</h3>
+          <p>Complimentary fiber-optic internet available in all rooms and public areas.</p>
+        </div>
+      </div>
+      
+      <div class="service-item">
+        <i class="fas fa-swimming-pool"></i>
+        <div>
+          <h3>Rooftop Pool</h3>
+          <p>Relax by our heated infinity pool with panoramic views of the city.</p>
+        </div>
+      </div>
+
+      <div class="service-item">
+        <i class="fas fa-spa"></i>
+        <div>
+          <h3>Spa & Wellness</h3>
+          <p>Full-service spa offering massages, facials, and traditional steam baths.</p>
+        </div>
+      </div>
+
+      <div class="service-item">
+        <i class="fas fa-utensils"></i>
+        <div>
+          <h3>24/7 Room Service</h3>
+          <p>Enjoy our curated menu of local and international dishes anytime.</p>
+        </div>
+      </div>
+
+      <div class="service-item">
+        <i class="fas fa-shuttle-van"></i>
+        <div>
+          <h3>Airport Transfers</h3>
+          <p>Complimentary shuttle service to and from Bole International Airport.</p>
+        </div>
+      </div>
+
+      <div class="service-item">
+        <i class="fas fa-dumbbell"></i>
+        <div>
+          <h3>Fitness Center</h3>
+          <p>State-of-the-art gym equipment open 24 hours for all guests.</p>
+        </div>
+      </div>
+
+      <div class="service-item">
+        <i class="fas fa-concierge-bell"></i>
+        <div>
+          <h3>24-Hour Front Desk</h3>
+          <p>Our concierge team is always available to assist with tours and requests.</p>
+        </div>
+      </div>
+
+      <div class="service-item">
+        <i class="fas fa-tshirt"></i>
+        <div>
+          <h3>Laundry & Dry Cleaning</h3>
+          <p>Same-day laundry and pressing services available upon request.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

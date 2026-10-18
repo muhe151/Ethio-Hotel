@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ethio Hotel — Luxury in the Heart of Ethiopia</title>
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* ===== INLINE CSS ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f7f5f0; color: #0f0f0f; line-height: 1.6; }
+    h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+    /* NAVBAR */
+    nav { background: #0f0f0f; color: #fff; padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+    nav .logo { font-size: 1.5rem; font-weight: 700; color: #c9a227; }
+    nav ul { display: flex; gap: 2rem; list-style: none; align-items: center; }
+    nav a { color: rgba(255,255,255,.85); text-decoration: none; font-weight: 500; transition: 0.3s; }
+    nav a:hover { color: #c9a227; }
+    nav .btn-nav { background: #c9a227; color: #0f0f0f; padding: .5rem 1rem; border-radius: 8px; font-weight: 700; }
+
+    /* HERO */
+    .hero { min-height: 75vh; background: linear-gradient(135deg, rgba(15,15,15,.75) 0%, rgba(15,15,15,.4) 100%), url('https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920') center/cover; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 2rem; }
+    .hero h1 { font-size: 3.5rem; margin-bottom: 1rem; text-shadow: 0 4px 16px rgba(0,0,0,.5); }
+    .hero p { font-size: 1.2rem; margin-bottom: 2rem; max-width: 600px; }
+    .btn { background: #c9a227; color: #0f0f0f; padding: .85rem 1.8rem; border: none; border-radius: 8px; font-size: .95rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: 0.3s; }
+    .btn:hover { background: #a88418; transform: translateY(-2px); }
+
+    /* GRID & CARDS */
+    .container { max-width: 1200px; margin: 4rem auto; padding: 0 5%; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2rem; }
+    .room-card { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,.08); display: flex; flex-direction: column; transition: 0.3s; }
+    .room-card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px rgba(0,0,0,.14); }
+    .room-card .img-wrap { position: relative; height: 220px; overflow: hidden; }
+    .room-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+    .room-card .status-overlay { position: absolute; top: 1rem; left: 1rem; }
+    .room-card .body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
+    .room-card h3 { font-size: 1.35rem; margin-bottom: 0.3rem; }
+    .room-card .meta { color: #666; font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .room-card .desc { font-size: 0.9rem; color: #666; margin-bottom: 1rem; flex: 1; }
+    .room-card .footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 1rem; }
+    .room-card .price { color: #0d7f3f; font-weight: 700; font-size: 1.1rem; }
+    .badge { display: inline-block; padding: .35rem .75rem; border-radius: 100px; font-size: .72rem; font-weight: 700; text-transform: uppercase; }
+    .badge-available { background: #d1fae5; color: #065f46; }
+    .badge-booked { background: #fee2e2; color: #991b1b; }
+
+    /* FOOTER */
+    .site-footer { background: #111; color: #aaa; padding: 4rem 5% 2rem; margin-top: 4rem; }
+    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto; }
+    .footer-col h3 { color: #fff; margin-bottom: 1.5rem; font-family: 'Playfair Display', serif; font-size: 1.2rem; }
+    .footer-col p, .footer-col a { color: #aaa; text-decoration: none; display: block; margin-bottom: 0.8rem; font-size: 0.95rem; transition: 0.3s; }
+    .footer-col a:hover { color: #c9a227; }
+    .footer-social { display: flex; gap: 1rem; margin-top: 1rem; }
+    .footer-social a { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.1); color: #fff; font-size: 1.2rem; margin-bottom: 0; }
+    .footer-social a:hover { background: #c9a227; color: #111; transform: translateY(-3px); }
+    .footer-bottom { text-align: center; padding-top: 2rem; margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
+        /* FIX FOR WIDE SCREEN */
+    .container {
+      max-width: 1000px; /* Makes the grid compact */
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    .grid {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Makes the cards smaller */
+          /* FIX FOR LONG DESCRIPTIONS AND CARD WIDTH */
+    .grid {
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* Makes cards wider */
+    }
+    .room-card .desc {
+      display: -webkit-box;
+      -webkit-line-clamp: 3; /* Cuts text after 3 lines */
+      line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .room-card .footer {
+      margin-top: auto; /* Pushes price and button to the bottom */
+    }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo"><a href="index.html" style="color:inherit;text-decoration:none">🏨 Ethio Hotel</a></div>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="profile.html">Our Hotel</a></li>
+       <li><a href="about.html">Dining Menu</a></li>
+      <li><a href="rooms.html">Rooms</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="dashboard.html" id="navDashboard" style="display:none">Dashboard</a></li>
+      <li><a href="admin.html" id="navAdmin" style="display:none">Admin Panel</a></li>
+      <li id="authLinks"><a href="login.html">Login</a> <a href="signup.html" class="btn-nav">Sign Up</a></li>
+      <li id="userLinks" style="display:none"><a href="#" onclick="logout()">Logout</a></li>
+    </ul>
+  </nav>
+
+  <section class="hero">
+    <h1>Experience Luxury in Ethiopia</h1>
+    <p>Book your perfect stay with us — pay easily in Ethiopian Birr.</p>
+    <a href="rooms.html" class="btn" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Explore Rooms</a>
+  </section>
+
+  <div class="container">
+    <h2 style="text-align:center; font-size:2rem; margin-bottom:0.5rem;">Featured Rooms</h2>
+    <p style="text-align:center; color:#666; margin-bottom:3rem;">Discover our handpicked selection of premium accommodations</p>
+    <div class="grid" id="featuredRooms"><p style="text-align:center;width:100%;">Loading rooms...</p></div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <!-- Brand & Socials -->
+      <div class="footer-col">
+        <h3>🏨 Ethio Hotel</h3>
+        <p style="margin-bottom:1.5rem;">Experience the perfect blend of modern luxury and traditional Ethiopian hospitality.</p>
+        <div class="footer-social">
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-telegram-plane"></i></a>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="footer-col">
+        <h3>Quick Links</h3>
+        <a href="index.html">Home</a>
+        <a href="rooms.html">Our Rooms</a>
+        <a href="contact.html">Contact Us</a>
+        <a href="login.html">Guest Login</a>
+      </div>
+
+      <!-- Location -->
+      <div class="footer-col">
+        <h3>Location</h3>
+        <p><i class="fas fa-map-marker-alt" style="color:#c9a227;margin-right:8px;"></i> Bole Road, Addis Ababa, Ethiopia</p>
+        <p><i class="fas fa-phone" style="color:#c9a227;margin-right:8px;"></i> +251 11 555 5555</p>
+        <p><i class="fas fa-envelope" style="color:#c9a227;margin-right:8px;"></i> info@ethiohotel.com</p>
+      </div>
+
+      <!-- Legal -->
+      <div class="footer-col">
+        <h3>Policies</h3>
+        <a href="policies.html?type=privacy">Privacy Policy</a>
+        <a href="policies.html?type=terms">Terms of Service</a>
+        <a href="policies.html?type=cancellation">Cancellation Policy</a>
+        <a href="contact.html">Contact Support</a>
+      </div>
+    </div>
+    <div class="footer-bottom" style="display:flex; flex-direction:column; justify-content:center; align-items:center; gap:0.5rem;">
+      <p style="margin:0;">&copy; 2026 Ethio Hotel. All rights reserved.</p>
+      <a href="admin-login.html" style="color:#666; font-size:0.8rem; text-decoration:none; transition:0.3s;" onmouseover="this.style.color='#c9a227'" onmouseout="this.style.color='#666'">
+        🔒 Staff Portal
+      </a>
+    </div>
+  </footer>
+
+  <script>
+    // INLINE API FUNCTIONS
+    const API = '/api';
+    async function apiFetch(path, options = {}) {
+      const res = await fetch(API + path, { credentials: 'include', headers: { ...(options.headers || {}) }, ...options });
+      const text = await res.text();
+      let data; try { data = JSON.parse(text); } catch { throw new Error('Server error (' + res.status + ')'); }
+      if (!res.ok) throw new Error(data.message || 'Request failed');
+      return data;
+    }
+    async function getCurrentUser() {
+      try { const { user } = await apiFetch('/auth/me'); return user; } catch { return null; }
+    }
+    async function logout() {
+      try { await apiFetch('/auth/logout', { method: 'POST' }); } catch {}
+      window.location.href = 'index.html';
+    }
+
+    // LOAD DATA
+    (async () => {
+      const user = await getCurrentUser();
+      if (user) {
+        document.getElementById('authLinks').style.display = 'none';
+        document.getElementById('userLinks').style.display = 'list-item';
+        document.getElementById('navDashboard').style.display = 'block';
+        if (user.role === 'admin') document.getElementById('navAdmin').style.display = 'block';
+      }
+      
+      try {
+        const rooms = await apiFetch('/rooms');
+        if (rooms.length === 0) {
+          document.getElementById('featuredRooms').innerHTML = '<p style="text-align:center;width:100%;color:#666;">No rooms in database. Please run "npm run seed" in the backend.</p>';
+          return;
+        }
+        
+        document.getElementById('featuredRooms').innerHTML = rooms.slice(0, 3).map(r => `
+          <div class="room-card">
+            <div class="img-wrap">
+              <img src="${r.images?.[0] || 'https://via.placeholder.com/400x220'}" alt="${r.name}">
+              <div class="status-overlay">${r.status === 'Fully Booked' ? '<span class="badge badge-booked">Fully Booked</span>' : '<span class="badge badge-available">Available</span>'}</div>
+            </div>
+            <div class="body">
+              <h3>${r.name}</h3>
+              <div class="meta">${r.type} • Sleeps ${r.capacity}</div>
+              <p class="desc">${r.description || ''}</p>
+              <div class="footer">
+                <div class="price">${r.pricePerNight.toLocaleString()} ETB</div>
+                <a href="room-detail.html?id=${r._id}" class="btn btn-sm">View Details</a>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) { 
+        document.getElementById('featuredRooms').innerHTML = '<p style="text-align:center;color:red;width:100%;">Failed to load rooms: ' + err.message + '</p>'; 
+      }
+    })();
+  </script>
+</body>
+</html>

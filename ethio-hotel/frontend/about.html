@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Dining Menu — Ethio Hotel</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    .page-header { background: #111; color: #fff; padding: 4rem 5%; text-align: center; margin-bottom: 3rem; }
+    .page-header h1 { color: #c9a227; font-size: 3rem; margin-bottom: 1rem; font-family: 'Playfair Display', serif; }
+    .page-header p { color: #aaa; font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+
+    .menu-container { max-width: 900px; margin: 0 auto 5rem; padding: 0 5%; }
+    .menu-category { margin-bottom: 3rem; }
+    .menu-category h2 { font-family: 'Playfair Display', serif; font-size: 2rem; color: #1a1a1a; border-bottom: 2px solid #c9a227; padding-bottom: 0.5rem; margin-bottom: 2rem; }
+    
+    .menu-list { display: flex; flex-direction: column; gap: 1.5rem; }
+    
+    .menu-item { 
+      display: flex; 
+      align-items: center; 
+      gap: 2rem; 
+      background: #fff; 
+      padding: 1.5rem; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+      transition: 0.3s;
+      border: 1px solid #f0f0f0;
+    }
+    .menu-item:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.08); transform: translateY(-2px); border-color: #c9a227; }
+    
+    /* The Small Image */
+    .menu-item img { 
+      width: 120px; 
+      height: 120px; 
+      object-fit: cover; 
+      border-radius: 10px; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    
+    .menu-details { flex: 1; }
+    .menu-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem; }
+    .menu-header h3 { font-family: 'Inter', sans-serif; font-size: 1.3rem; color: #1a1a1a; margin: 0; font-weight: 700; }
+    .menu-price { font-weight: 700; color: #078930; font-size: 1.3rem; }
+    .menu-details p { font-size: 0.95rem; color: #666; margin: 0; line-height: 1.6; }
+
+    @media (max-width: 600px) {
+      .menu-item { flex-direction: column; text-align: center; gap: 1rem; }
+      .menu-item img { width: 100%; height: 200px; }
+      .menu-header { flex-direction: column; align-items: center; gap: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo"><a href="index.html" style="color:inherit;text-decoration:none">🏨 Ethio Hotel</a></div>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="profile.html">Our Hotel</a></li>
+      <li><a href="about.html" style="color:#c9a227;">Dining Menu</a></li> <!-- ACTIVE LINK -->
+      <li><a href="rooms.html">Rooms</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-header">
+    <h1>Restaurant & Bar Menu</h1>
+    <p>Freshly prepared by our expert chefs using the finest local and international ingredients.</p>
+  </div>
+
+  <div class="menu-container" id="menuContainer">
+    <p style="text-align:center; color:#888; padding: 3rem;">Loading menu...</p>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    (async () => {
+      try {
+        const services = await apiFetch('/services');
+        const container = document.getElementById('menuContainer');
+        
+        // Separate Food and Beverages
+        const foodItems = services.filter(s => s.category === 'Food');
+        const drinks = services.filter(s => s.category === 'Beverage');
+
+        if (foodItems.length === 0 && drinks.length === 0) {
+          container.innerHTML = '<p style="text-align:center; color:#888; padding: 3rem;">The menu is currently being updated. Please check back later.</p>';
+          return;
+        }
+
+        let html = '';
+
+        // Render Food Section
+        if (foodItems.length > 0) {
+          html += `
+            <div class="menu-category">
+              <h2>Main Dishes</h2>
+              <div class="menu-list">
+                ${foodItems.map(item => `
+                  <div class="menu-item">
+                    <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}" alt="${item.name}">
+                    <div class="menu-details">
+                      <div class="menu-header">
+                        <h3>${item.name}</h3>
+                        <span class="menu-price">${item.price.toLocaleString()} ETB</span>
+                      </div>
+                      <p>${item.description || 'A delicious house specialty prepared with the finest ingredients.'}</p>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        // Render Beverage Section
+        if (drinks.length > 0) {
+          html += `
+            <div class="menu-category">
+              <h2>Beverages & Drinks</h2>
+              <div class="menu-list">
+                ${drinks.map(item => `
+                  <div class="menu-item">
+                    <img src="${item.image || 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400'}" alt="${item.name}">
+                    <div class="menu-details">
+                      <div class="menu-header">
+                        <h3>${item.name}</h3>
+                        <span class="menu-price">${item.price.toLocaleString()} ETB</span>
+                      </div>
+                      <p>${item.description || 'Refreshing and perfectly served.'}</p>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        container.innerHTML = html;
+      } catch (err) {
+        document.getElementById('menuContainer').innerHTML = '<p style="color:red; text-align:center; padding: 3rem;">Failed to load menu. Please ensure the backend is running.</p>';
+      }
+    })();
+  </script>
+</body>
+</html>

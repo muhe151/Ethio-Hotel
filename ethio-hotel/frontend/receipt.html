@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receipt — Ethio Hotel</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    .receipt-wrap { max-width: 750px; margin: 2rem auto; background: #fff; padding: 3rem; border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,.1); position: relative; }
+    .receipt-header { display: flex; justify-content: space-between; border-bottom: 3px solid #c9a227; padding-bottom: 1.5rem; margin-bottom: 1.5rem; }
+    .receipt-header h1 { color: #c9a227; margin-bottom: .3rem; font-family: 'Playfair Display', serif; }
+    .receipt-header .no { text-align: right; }
+    .receipt-header .no .label { font-size: .75rem; color: #888; text-transform: uppercase; }
+    .receipt-header .no .value { font-weight: 700; font-size: 1.1rem; }
+    .receipt-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+    .receipt-table td { padding: .8rem 0; border-bottom: 1px solid #f0f0f0; }
+    .receipt-table td:last-child { text-align: right; font-weight: 600; }
+    .receipt-total { background: #fef9f0; padding: 1.8rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; border: 1px solid #f5d76e; }
+    .receipt-total .amount { font-size: 2.2rem; font-weight: 700; color: #c9a227; font-family: 'Playfair Display', serif; }
+    .receipt-total .paid-badge { background: #078930; color: #fff; padding: .4rem 1rem; border-radius: 20px; font-weight: 600; display: inline-block; margin-top: .3rem; font-size: 0.85rem;}
+    .receipt-total .pending-badge { background: #b8860b; color: #fff; padding: .4rem 1rem; border-radius: 20px; font-weight: 600; display: inline-block; margin-top: .3rem; font-size: 0.85rem;}
+    .receipt-footer { text-align: center; color: #888; font-size: .85rem; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px dashed #ddd; }
+    
+    @media print { 
+      nav, .no-print { display: none !important; } 
+      body { background: #fff; } 
+      .receipt-wrap { box-shadow: none !important; padding: 0; margin: 0; } 
+          .receipt-wrap { 
+      max-width: 750px; 
+      margin: 2rem auto; 
+      background: #fff; 
+      padding: 2rem; /* Reduced from 3rem to 2rem */
+      border-radius: 14px; 
+      box-shadow: 0 8px 30px rgba(0,0,0,.1); 
+      position: relative; 
+    }
+    }
+  </style>
+</head>
+<body>
+  <nav class="no-print">
+    <div class="logo"><a href="index.html" style="color:inherit;text-decoration:none">🏨 Ethio Hotel</a></div>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="rooms.html">Rooms</a></li>
+    </ul>
+  </nav>
+
+  <div id="receiptBox"><p style="padding:3rem;text-align:center">Loading receipt...</p></div>
+
+  <!-- ACTION BUTTONS (Side by Side) -->
+  <div class="no-print" style="text-align:center; margin: 1.5rem auto 3rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+    <button onclick="window.print()" class="btn" style="padding:.9rem 2rem; display:flex; align-items:center; gap:0.5rem;">
+      <i class="fas fa-print"></i> Print Receipt
+    </button>
+    
+        <button onclick="downloadPDF()" id="downloadBtn" class="btn" style="padding:.9rem 2rem; background:#2563eb; color:#fff; display:flex; align-items:center; gap:0.5rem;">
+      <i class="fas fa-file-pdf"></i> Download PDF
+    </button>
+    
+    <a href="dashboard.html" class="btn btn-ghost" style="padding:.9rem 2rem">← Back to Dashboard</a>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+           function downloadPDF() {
+      const element = document.querySelector('.receipt-wrap');
+      const btn = document.getElementById('downloadBtn');
+      
+      const originalText = btn.innerHTML;
+      btn.innerHTML = 'Generating PDF...';
+      btn.disabled = true;
+
+      // UPDATED SETTINGS TO FORCE 1 PAGE
+      const opt = {
+        margin:       0, // Removes margins so it fits perfectly
+        filename:     'Ethio_Hotel_Receipt.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, scrollY: 0 }, // Prevents weird scrolling bugs
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] } // Forces it to avoid breaking pages
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      });
+    }
+
+    const id = new URLSearchParams(location.search).get('id');
+
+    (async () => {
+      const user = await getCurrentUser();
+      if (!user) return location.href = 'login.html';
+      if (!id) return document.getElementById('receiptBox').innerHTML = '<p style="padding:3rem;text-align:center">No receipt</p>';
+
+      try {
+        const b = await apiFetch('/bookings/' + id);
+        const r = b.room || {};
+        const u = b.user || {};
+        const cashier = b.cashReceivedBy;
+        const isPaid = b.paymentStatus === 'paid';
+        
+        let receivedByText = "System (Online)";
+        if (b.paymentMethod === 'cash') receivedByText = cashier ? cashier.name : 'Reception';
+        else if (['telebirr', 'cbe', 'awash'].includes(b.paymentMethod)) receivedByText = "Direct Bank Transfer";
+
+        document.getElementById('receiptBox').innerHTML = `
+          <div class="receipt-wrap">
+            <div class="receipt-header">
+              <div>
+                <h1>🏨 Ethio Hotel</h1>
+                <div style="color:#888;font-size:.85rem">Addis Ababa, Ethiopia</div>
+                <div style="color:#888;font-size:.85rem">+251 11 555 5555</div>
+              </div>
+              <div class="no">
+                <div class="label">Receipt No.</div>
+                <div class="value">${b.receiptNumber || 'N/A'}</div>
+                <div class="label" style="margin-top:.8rem">Date Issued</div>
+                <div style="font-weight:600">${new Date(b.createdAt).toLocaleDateString()}</div>
+                <div class="label" style="margin-top:.8rem">Payment</div>
+                <span class="badge ${b.paymentMethod === 'chapa' ? 'badge-limited' : 'badge-available'}" style="margin-top:.2rem;display:inline-block">${b.paymentMethod.toUpperCase()}</span>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+              <div>
+                <div style="font-size:.75rem;color:#888;text-transform:uppercase;margin-bottom:.3rem">Guest</div>
+                <div style="font-weight:600">${u.name || 'Guest'}</div>
+                <div style="color:#555;font-size:.9rem">${u.email || ''}</div>
+                <div style="color:#555;font-size:.9rem">${u.phone || ''}</div>
+              </div>
+              <div>
+                <div style="font-size:.75rem;color:#888;text-transform:uppercase;margin-bottom:.3rem">Received By</div>
+                <div style="font-weight:600">${receivedByText}</div>
+              </div>
+            </div>
+
+            <table class="receipt-table">
+              <tbody>
+                <tr><td>Room</td><td>${r.name || 'N/A'} (${r.type || ''})</td></tr>
+                <tr><td>Check-In</td><td>${new Date(b.checkIn).toDateString()}</td></tr>
+                <tr><td>Check-Out</td><td>${new Date(b.checkOut).toDateString()}</td></tr>
+                <tr><td>Guests</td><td>${b.guests}</td></tr>
+                <tr><td>Nights</td><td>${Math.ceil((new Date(b.checkOut) - new Date(b.checkIn)) / 86400000)}</td></tr>
+                <tr><td>Price per Night</td><td>${r.pricePerNight ? r.pricePerNight.toLocaleString() + ' ETB' : '—'}</td></tr>
+                
+                <!-- EXTRA SERVICES (FOOD) -->
+                ${(b.extraServices || []).map(s => `
+                  <tr>
+                    <td style="color:#555;">Extra: ${s.serviceName} (x${s.quantity})</td>
+                    <td style="color:#555;">${(s.price * s.quantity).toLocaleString()} ETB</td>
+                  </tr>
+                `).join('')}
+
+                <tr><td>Transaction ID</td><td>${b.transactionId || b.txRef || '—'}</td></tr>
+              </tbody>
+            </table>
+
+            <div class="receipt-total">
+              <div>
+                <div style="font-size:.85rem;color:#888;text-transform:uppercase">Total Amount</div>
+                ${isPaid ? '<div class="paid-badge">✓ PAID</div>' : '<div class="pending-badge">⏳ ' + b.paymentStatus.toUpperCase() + '</div>'}
+              </div>
+              <div class="amount">${b.totalPrice.toLocaleString()} ETB</div>
+            </div>
+
+            <div class="receipt-footer">
+              <div>Thank you for choosing <strong>Ethio Hotel</strong></div>
+              <div style="margin-top:.3rem">This is a computer-generated receipt — no signature required.</div>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        document.getElementById('receiptBox').innerHTML = `<p style="color:red;padding:3rem;text-align:center">Failed: ${err.message}</p>`;
+      }
+    })();
+  </script>
+</body>
+</html>

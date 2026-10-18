@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel — Ethio Hotel</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    .admin-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .admin-form-grid input, .admin-form-grid select { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 0; }
+    
+    /* IMPROVED TABLE STYLES */
+    .dash-section th, .dash-section td { padding: 1.2rem 1rem; text-align: left; border-bottom: 1px solid #f0f0f0; font-size: 0.95rem; }
+    .dash-section th { background: #fafafa; font-size: 0.75rem; text-transform: uppercase; color: #888; letter-spacing: 0.5px; font-weight: 700; }
+    .dash-section tr:hover td { background: #fafafa; }
+    
+    /* BUTTON STYLES */
+    .action-btn { padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: white; border: none; cursor: pointer; transition: 0.2s; }
+    .action-btn:hover { opacity: 0.8; transform: translateY(-1px); }
+    
+    .btn-outline { background: transparent; border: 1px solid #ccc; color: #555; }
+    .btn-outline:hover { background: #f0f0f0; color: #111; }
+    
+    .btn-approve { background: #078930; }
+    .btn-receipt { background: #2563eb; }
+    .btn-delete { background: #d92424; }
+    
+    /* INLINE FOOD ADDITION */
+    .add-food-container { display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: center; }
+    .add-food-container select { padding: 0.4rem; font-size: 0.85rem; border-radius: 6px; border: 1px solid #ccc; flex: 1; max-width: 200px; margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <h2>⚙️ Admin Panel</h2>
+      <a href="#" class="active" onclick="showTab('rooms'); return false;">🛏️ Rooms</a>
+      <a href="#" onclick="showTab('staff'); return false;">👥 Staff</a>
+      <a href="#" onclick="showTab('services'); return false;">🍔 Food & Services</a>
+      <a href="#" onclick="showTab('bookings'); return false;">💰 Bookings & Cash</a>
+      <a href="#" onclick="showTab('analytics'); return false;">📈 Reports & Analytics</a>
+      <a href="#" onclick="showTab('messages'); return false;">✉️ Guest Messages</a>
+      <a href="dashboard.html">📊 Guest View</a>
+      <a href="#" onclick="logout(); return false;" style="margin-top:1rem; color:#d92424;">🚪 Logout</a>
+    </aside>
+
+    <main class="dash-main">
+      <div class="dash-header"><h1 id="adminTitle">Room Management</h1></div>
+
+      <!-- ROOMS TAB -->
+      <div id="tab-rooms">
+        <div class="dash-section">
+          <h2>Add New Room Type</h2>
+          <div class="admin-form-grid">
+            <div><label>Name</label><input id="rName"></div>
+            <div><label>Type</label><select id="rType"><option>Single</option><option>Double</option><option>Suite</option><option>Presidential</option></select></div>
+            <div><label>Price (ETB)</label><input id="rPrice" type="number"></div>
+            <div><label>Total Quantity</label><input id="rTotal" type="number" value="5"></div>
+          </div>
+          <button class="btn" onclick="createRoom()">+ Add Room</button>
+        </div>
+        <div class="dash-section"><h2>Existing Rooms</h2><div id="roomsList">Loading...</div></div>
+      </div>
+
+      <!-- STAFF TAB -->
+      <div id="tab-staff" style="display:none">
+        <div class="dash-section">
+          <h2>Add New Staff Member</h2>
+          <div class="admin-form-grid">
+            <div><label>Full Name</label><input id="sName"></div>
+            <div><label>Role</label><select id="sRole"><option>Receptionist</option><option>Cleaner</option><option>Waiter</option><option>Cook</option></select></div>
+            <div><label>Phone</label><input id="sPhone"></div>
+            <div><label>Salary (ETB)</label><input id="sSalary" type="number"></div>
+          </div>
+          <button class="btn" onclick="createStaff()">+ Add Staff</button>
+        </div>
+        <div class="dash-section"><h2>All Staff</h2><div id="staffList">Loading...</div></div>
+      </div>
+
+      <!-- SERVICES TAB -->
+      <div id="tab-services" style="display:none">
+        <div class="dash-section">
+          <h2>Add Food or Service</h2>
+          <div class="admin-form-grid">
+            <div><label>Item Name</label><input id="svName"></div>
+            <div><label>Category</label><select id="svCategory"><option>Food</option><option>Beverage</option><option>Service</option></select></div>
+            <div><label>Price (ETB)</label><input id="svPrice" type="number"></div>
+          </div>
+          <button class="btn" onclick="createService()">+ Add Item</button>
+        </div>
+        <div class="dash-section"><h2>Menu & Services</h2><div id="servicesList">Loading...</div></div>
+      </div>
+            <!-- MESSAGES TAB -->
+      <div id="tab-messages" style="display:none">
+        <div class="dash-section">
+          <h2>Guest Messages</h2>
+          <div id="messagesList">Loading...</div>
+        </div>
+      </div>
+            <!-- ANALYTICS TAB -->
+      <div id="tab-analytics" style="display:none">
+        <div class="dash-section" id="reportContainer" style="background:#fff; padding: 2rem; border-radius: 12px;">
+          
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem; border-bottom: 2px solid #eee; padding-bottom: 1rem;">
+            <h2 style="margin:0;">Financial & Sales Report</h2>
+            <button onclick="downloadReport()" class="action-btn" style="background:#2563eb; padding: 0.8rem 1.5rem; font-size: 0.9rem;">
+              <i class="fas fa-download"></i> Download PDF
+            </button>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="stats-grid" style="margin-bottom: 2rem;">
+            <div class="stat-card" style="border-top-color:#078930;">
+              <h3>Today's Revenue</h3>
+              <p id="analyticsToday" style="color:#078930;">0 ETB</p>
+            </div>
+            <div class="stat-card" style="border-top-color:#2563eb;">
+              <h3>Total Revenue</h3>
+              <p id="analyticsTotal" style="color:#2563eb;">0 ETB</p>
+            </div>
+            <div class="stat-card" style="border-top-color:#c9a227;">
+              <h3>Total Bookings</h3>
+              <p id="analyticsBookings" style="color:#c9a227;">0</p>
+            </div>
+          </div>
+
+          <!-- Graphs Area -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <div style="background:#fafafa; padding: 1rem; border-radius: 10px; border: 1px solid #eee;">
+              <h4 style="text-align:center; margin-bottom: 1rem;">Revenue Breakdown</h4>
+              <canvas id="revenueChart"></canvas>
+            </div>
+            <div style="background:#fafafa; padding: 1rem; border-radius: 10px; border: 1px solid #eee;">
+              <h4 style="text-align:center; margin-bottom: 1rem;">Top Selling Items</h4>
+              <canvas id="foodChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Top Items Table -->
+          <h3 style="margin-bottom: 1rem;">Detailed Food Sales</h3>
+          <table style="width:100%; border-collapse:collapse; background:#fff;">
+            <thead><tr><th>Item Name</th><th>Total Revenue</th></tr></thead>
+            <tbody id="analyticsFoodList"><tr><td colspan="2">Loading...</td></tr></tbody>
+          </table>
+
+        </div>
+      </div>
+      <!-- BOOKINGS TAB -->
+      <div id="tab-bookings" style="display:none">
+        <div class="dash-section">
+          <h2>All Bookings & Cash</h2>
+          <div id="allBookingsList">Loading...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API = '/api';
+    
+    async function apiFetch(path, options = {}) {
+      const res = await fetch(API + path, { credentials: 'include', headers: { ...(options.headers || {}) }, ...options });
+      const text = await res.text();
+      let data; try { data = JSON.parse(text); } catch { throw new Error('Server error (' + res.status + ')'); }
+      if (!res.ok) throw new Error(data.message || 'Request failed');
+      return data;
+    }
+    
+    async function getCurrentUser() { try { const { user } = await apiFetch('/auth/me'); return user; } catch { return null; } }
+    async function logout() { try { await apiFetch('/auth/logout', { method: 'POST' }); } catch {} window.location.href = 'index.html'; }
+
+    function showTab(name) {
+      document.querySelectorAll('.dash-sidebar a').forEach(a => a.classList.remove('active'));
+      document.querySelector(`.dash-sidebar a[onclick*="${name}"]`).classList.add('active');
+      document.querySelectorAll('[id^="tab-"]').forEach(d => d.style.display = 'none');
+      document.getElementById('tab-' + name).style.display = 'block';
+      document.getElementById('adminTitle').textContent = name.charAt(0).toUpperCase() + name.slice(1) + ' Management';
+      if (name === 'rooms') loadRooms();
+      if (name === 'staff') loadStaff();
+      if (name === 'services') loadServices();
+      if (name === 'bookings') loadBookings();
+      if (name === 'messages') loadMessages();
+      if (name === 'analytics') loadAnalytics();
+    }
+
+    // ===== ROOMS =====
+    async function loadRooms() {
+      const box = document.getElementById('roomsList');
+      try {
+        const rooms = await apiFetch('/rooms');
+        box.innerHTML = `<table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th>Name</th><th>Price</th><th>Total</th><th>Action</th></tr></thead>
+          <tbody>${rooms.map(r => `
+            <tr>
+              <td><strong>${r.name}</strong></td>
+              <td>${r.pricePerNight} ETB</td>
+              <td>${r.totalRooms}</td>
+              <td><button class="action-btn btn-delete" onclick="deleteRoom('${r._id}')">Delete</button></td>
+            </tr>`).join('')}</tbody></table>`;
+      } catch (err) { box.innerHTML = `<p style="color:red">${err.message}</p>`; }
+    }
+
+    async function createRoom() {
+      const payload = {
+        name: document.getElementById('rName').value,
+        type: document.getElementById('rType').value,
+        pricePerNight: Number(document.getElementById('rPrice').value),
+        totalRooms: Number(document.getElementById('rTotal').value)
+      };
+      if (!payload.name || !payload.pricePerNight) return alert('Name and Price cannot be empty');
+      try {
+        await apiFetch('/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        document.getElementById('rName').value = '';
+        document.getElementById('rPrice').value = '';
+        loadRooms();
+      } catch (err) { alert(err.message); }
+    }
+    async function deleteRoom(id) { if(confirm('Delete?')) { await apiFetch('/rooms/' + id, { method: 'DELETE' }); loadRooms(); } }
+
+    // ===== STAFF =====
+    async function loadStaff() {
+      const box = document.getElementById('staffList');
+      try {
+        const staff = await apiFetch('/staff');
+        if (!staff.length) { box.innerHTML = '<p>No staff added yet.</p>'; return; }
+        box.innerHTML = `<table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th>Name</th><th>Role</th><th>Action</th></tr></thead>
+          <tbody>${staff.map(s => `
+            <tr>
+              <td><strong>${s.name}</strong></td>
+              <td>${s.role}</td>
+              <td><button class="action-btn btn-delete" onclick="deleteStaff('${s._id}')">Delete</button></td>
+            </tr>`).join('')}</tbody></table>`;
+      } catch (err) { box.innerHTML = `<p style="color:red">${err.message}</p>`; }
+    }
+
+    async function createStaff() {
+      const payload = {
+        name: document.getElementById('sName').value,
+        role: document.getElementById('sRole').value,
+        phone: document.getElementById('sPhone').value,
+        salary: Number(document.getElementById('sSalary').value) || 0
+      };
+      if (!payload.name) return alert('Name is required');
+      try {
+        await apiFetch('/staff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        document.getElementById('sName').value = '';
+        loadStaff();
+      } catch (err) { alert(err.message); }
+    }
+    async function deleteStaff(id) { if(confirm('Delete?')) { await apiFetch('/staff/' + id, { method: 'DELETE' }); loadStaff(); } }
+
+    // ===== SERVICES =====
+    async function loadServices() {
+      const box = document.getElementById('servicesList');
+      try {
+        const services = await apiFetch('/services');
+        if (!services.length) { box.innerHTML = '<p>No items added yet.</p>'; return; }
+        box.innerHTML = `<table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Action</th></tr></thead>
+          <tbody>${services.map(s => `
+            <tr>
+              <td><strong>${s.name}</strong></td>
+              <td>${s.category}</td>
+              <td>${s.price} ETB</td>
+              <td><button class="action-btn btn-delete" onclick="deleteService('${s._id}')">Delete</button></td>
+            </tr>`).join('')}</tbody></table>`;
+      } catch (err) { box.innerHTML = `<p style="color:red">${err.message}</p>`; }
+    }
+
+    async function createService() {
+      const payload = {
+        name: document.getElementById('svName').value,
+        category: document.getElementById('svCategory').value,
+        price: Number(document.getElementById('svPrice').value)
+      };
+      if (!payload.name || !payload.price) return alert('Name and Price are required');
+      try {
+        await apiFetch('/services', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        document.getElementById('svName').value = '';
+        document.getElementById('svPrice').value = '';
+        loadServices();
+      } catch (err) { alert(err.message); }
+    }
+    async function deleteService(id) { if(confirm('Delete?')) { await apiFetch('/services/' + id, { method: 'DELETE' }); loadServices(); } }
+
+    // ===== BOOKINGS =====
+    async function loadBookings() {
+      const box = document.getElementById('allBookingsList');
+      try {
+        const bookings = await apiFetch('/bookings/all');
+        const services = await apiFetch('/services');
+        
+        box.innerHTML = `<table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th>Receipt</th><th>Guest</th><th>Room</th><th>Total</th><th>Status</th><th>Actions & Add Items</th></tr></thead>
+          <tbody>${bookings.map(b => `
+            <tr>
+              <td><span style="font-size:0.8rem; color:#888; font-family:monospace;">${b.receiptNumber || '—'}</span></td>
+              <td><strong>${b.user ? b.user.name : '—'}</strong></td>
+              <td>${b.room ? b.room.name : '—'}</td>
+              <td><strong style="color:#078930;">${b.totalPrice.toLocaleString()} ETB</strong></td>
+              <td><span class="badge ${b.paymentStatus === 'paid' ? 'badge-available' : 'badge-limited'}">${b.paymentStatus.toUpperCase()}</span></td>
+              <td>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                  <a href="receipt.html?id=${b._id}" class="action-btn btn-outline"><i class="fas fa-receipt"></i> Receipt</a>
+                  
+                  ${b.paymentStatus !== 'paid' 
+                    ? `<button class="action-btn btn-approve" onclick="markPaid('${b._id}')"><i class="fas fa-check"></i> Approve</button>` 
+                    : ''}
+                  
+                  ${b.status !== 'cancelled' ? `
+                    <div class="add-food-container">
+                      <select id="add-item-${b._id}">
+                        <option value="">+ Add Food/Service</option>
+                        ${services.map(s => `<option value="${s._id}|${s.name}|${s.price}">${s.name} (${s.price} ETB)</option>`).join('')}
+                      </select>
+                      <button class="action-btn btn-receipt" onclick="addServiceToBooking('${b._id}')">Add</button>
+                    </div>
+                  ` : ''}
+                </div>
+              </td>
+            </tr>`).join('')}</tbody></table>`;
+      } catch (err) { box.innerHTML = `<p style="color:red">${err.message}</p>`; }
+    }
+
+    async function addServiceToBooking(bookingId) {
+      const select = document.getElementById(`add-item-${bookingId}`);
+      if (!select.value) return alert('Select an item first');
+      
+      const [id, name, price] = select.value.split('|');
+      try {
+        await apiFetch('/bookings/' + bookingId + '/add-service', {
+          method: 'PUT', 
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ serviceName: name, price: parseFloat(price), quantity: 1 })
+        });
+        loadBookings(); 
+      } catch (err) { alert(err.message); }
+    }
+
+    async function markPaid(id) { 
+      await apiFetch('/bookings/' + id + '/mark-cash-paid', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) }); 
+      loadBookings(); 
+    }
+        // ===== MESSAGES =====
+    async function loadMessages() {
+      const box = document.getElementById('messagesList');
+      try {
+        const msgs = await apiFetch('/contact');
+        if (!msgs.length) { box.innerHTML = '<p>No messages yet.</p>'; return; }
+        
+        box.innerHTML = `<table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Subject</th><th>Message</th></tr></thead>
+          <tbody>${msgs.map(m => `
+            <tr>
+              <td style="font-size:0.8rem; color:#888;">${new Date(m.createdAt).toLocaleDateString()}</td>
+              <td><strong>${m.name}</strong></td>
+              <td><a href="mailto:${m.email}" style="color:#2563eb;">${m.email}</a></td>
+              <td>${m.subject}</td>
+              <td style="max-width: 300px;">${m.message}</td>
+            </tr>`).join('')}</tbody></table>`;
+      } catch (err) { box.innerHTML = `<p style="color:red">${err.message}</p>`; }
+    }
+        // ===== ANALYTICS =====
+    async function loadAnalytics() {
+      try {
+        const data = await apiFetch('/analytics');
+        
+        document.getElementById('analyticsToday').textContent = data.todayRevenue.toLocaleString() + ' ETB';
+        document.getElementById('analyticsTotal').textContent = data.totalRevenue.toLocaleString() + ' ETB';
+        document.getElementById('analyticsBookings').textContent = data.totalBookings;
+        
+        const foodBox = document.getElementById('analyticsFoodList');
+        if (data.topItems.length === 0) {
+          foodBox.innerHTML = '<tr><td colspan="2" style="color:#888">No food sales yet.</td></tr>';
+        } else {
+          foodBox.innerHTML = data.topItems.map(item => `
+            <tr>
+              <td><strong>${item.name}</strong></td>
+              <td>${item.revenue.toLocaleString()} ETB</td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        alert('Failed to load analytics: ' + err.message);
+      }
+    }
+        let revenueChartInstance = null;
+    let foodChartInstance = null;
+
+    async function loadAnalytics() {
+      try {
+        const data = await apiFetch('/analytics');
+        
+        document.getElementById('analyticsToday').textContent = data.todayRevenue.toLocaleString() + ' ETB';
+        document.getElementById('analyticsTotal').textContent = data.totalRevenue.toLocaleString() + ' ETB';
+        document.getElementById('analyticsBookings').textContent = data.totalBookings;
+
+        // Draw Revenue Chart (Doughnut)
+        if (revenueChartInstance) revenueChartInstance.destroy();
+        const ctx1 = document.getElementById('revenueChart').getContext('2d');
+        revenueChartInstance = new Chart(ctx1, {
+          type: 'doughnut',
+          data: {
+            labels: ['Rooms', 'Food & Services'],
+            datasets: [{
+              data: [data.totalRoomRevenue, data.totalFoodRevenue],
+              backgroundColor: ['#2563eb', '#c9a227'],
+              borderWidth: 0
+            }]
+          },
+          options: { responsive: true, cutout: '70%' }
+        });
+
+        // Draw Food Chart (Bar)
+        if (foodChartInstance) foodChartInstance.destroy();
+        const ctx2 = document.getElementById('foodChart').getContext('2d');
+        foodChartInstance = new Chart(ctx2, {
+          type: 'bar',
+          data: {
+            labels: data.topItems.map(i => i.name),
+            datasets: [{
+              label: 'Revenue (ETB)',
+              data: data.topItems.map(i => i.revenue),
+              backgroundColor: '#078930',
+              borderRadius: 5
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+
+        // Fill Table
+        const foodBox = document.getElementById('analyticsFoodList');
+        if (data.topItems.length === 0) {
+          foodBox.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#888;">No food sales yet.</td></tr>';
+        } else {
+          foodBox.innerHTML = data.topItems.map(item => `
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 0.8rem;"><strong>${item.name}</strong></td>
+              <td style="padding: 0.8rem; color:#078930; font-weight:bold;">${item.revenue.toLocaleString()} ETB</td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        alert('Failed to load analytics: ' + err.message);
+      }
+    }
+
+    function downloadReport() {
+      const element = document.getElementById('reportContainer');
+      
+      const opt = {
+        margin:       0.5,
+        filename:     'Ethio_Hotel_Financial_Report.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' } // Landscape fits graphs better
+      };
+
+      html2pdf().set(opt).from(element).save();
+    }
+
+    (async () => {
+      const user = await getCurrentUser();
+      if (!user || user.role !== 'admin') return location.href = 'admin-login.html';
+      loadRooms();
+    })();
+  </script>
+</body>
+</html>

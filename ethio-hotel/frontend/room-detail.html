@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Room Details — Ethio Hotel</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* NEW MODERN LAYOUT */
+    .room-wrapper { max-width: 1200px; margin: 4rem auto; padding: 0 5%; display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; align-items: start; }
+    @media (max-width: 900px) { .room-wrapper { grid-template-columns: 1fr; } }
+
+    /* LEFT SIDE: IMAGE & INFO */
+    .room-image-box { position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+    .room-image-box img { width: 100%; height: 500px; object-fit: cover; display: block; }
+    
+    .room-info-box { margin-top: 2rem; }
+    .room-info-box h1 { font-family: 'Playfair Display', serif; font-size: 3rem; color: #1a1a1a; margin-bottom: 0.5rem; }
+    .room-info-box .subtitle { color: #c9a227; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1.5rem; }
+    .room-info-box p { color: #555; line-height: 1.8; font-size: 1.05rem; }
+    
+    .amenities-list { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 2rem; }
+    .amenities-list span { background: #f4f4f4; color: #444; padding: 0.5rem 1rem; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+    /* RIGHT SIDE: BOOKING CARD */
+    .booking-card { background: #fff; border-radius: 16px; padding: 2.5rem; box-shadow: 0 12px 40px rgba(0,0,0,0.08); border: 1px solid #eee; position: sticky; top: 100px; }
+    
+    .price-tag { font-size: 2rem; font-weight: 700; color: #078930; margin-bottom: 0.5rem; font-family: 'Playfair Display', serif; }
+    .price-tag span { font-size: 1rem; color: #888; font-weight: 400; font-family: 'Inter', sans-serif; }
+    
+    .availability-badge { display: inline-block; padding: 0.4rem 1rem; border-radius: 100px; font-size: 0.85rem; font-weight: 600; margin-bottom: 2rem; }
+    .bg-green { background: #e8f8ed; color: #078930; }
+    .bg-red { background: #ffe0e0; color: #da121a; }
+
+    .booking-card label { font-weight: 600; font-size: 0.85rem; color: #555; display: block; margin-bottom: 0.3rem; }
+    .booking-card input { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem; font-family: inherit; }
+
+    /* FOOD MENU SECTION */
+    .food-section { margin: 2rem 0; border-top: 1px solid #eee; padding-top: 1.5rem; }
+    .food-section h4 { font-family: 'Playfair Display', serif; color: #c9a227; font-size: 1.2rem; margin-bottom: 1rem; }
+    .food-menu-list { max-height: 180px; overflow-y: auto; padding-right: 0.5rem; }
+    .food-item { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px dashed #eee; font-size: 0.9rem; }
+    .food-item label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin: 0; font-weight: 500; color: #333; }
+    .food-item .f-price { color: #078930; font-weight: 700; }
+
+    /* TOTAL CALCULATION */
+    .total-box { background: #fafafa; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; }
+    .total-row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: #666; font-size: 0.9rem; }
+    .total-row.grand { border-top: 1px solid #ddd; padding-top: 0.8rem; margin-top: 0.8rem; color: #078930; font-weight: 700; font-size: 1.3rem; }
+
+    .btn-pay { width: 100%; padding: 1rem; background: #c9a227; color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.3s; }
+    .btn-pay:hover { background: #b08d1a; }
+    .btn-pay:disabled { background: #ccc; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo"><a href="index.html" style="color:inherit;text-decoration:none">🏨 Ethio Hotel</a></div>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="rooms.html">Rooms</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+    </ul>
+  </nav>
+
+  <div id="roomContent"><p style="padding:3rem;text-align:center;">Loading...</p></div>
+
+  <script src="js/api.js"></script>
+  <script>
+    const id = new URLSearchParams(location.search).get('id');
+    const box = document.getElementById('roomContent');
+    let currentRoom = null;
+    let availableServices = [];
+    let nights = 1;
+
+    if (!id) {
+      box.innerHTML = '<p style="padding:3rem;text-align:center;">No room selected. <a href="rooms.html">Browse rooms →</a></p>';
+    } else {
+      (async () => {
+        try {
+          const [room, services] = await Promise.all([
+            apiFetch('/rooms/' + id),
+            apiFetch('/services')
+          ]);
+          
+          currentRoom = room;
+          availableServices = services;
+          const isBooked = room.remainingRooms === 0;
+
+          box.innerHTML = `
+            <div class="room-wrapper">
+              
+              <!-- LEFT SIDE: IMAGE & DETAILS -->
+              <div>
+                <div class="room-image-box">
+                  <img src="${room.images?.[0] || 'https://via.placeholder.com/800x500'}" alt="${room.name}">
+                </div>
+                <div class="room-info-box">
+                  <h1>${room.name}</h1>
+                  <div class="subtitle">${room.type} • ${room.comfortLevel || 'Comfort'} Comfort</div>
+                  <p>${room.description || ''}</p>
+                  
+                  <div class="amenities-list">
+                    ${(room.amenities || []).map(a => `<span><i class="fas fa-check" style="color:#c9a227; margin-right:5px;"></i> ${a}</span>`).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT SIDE: BOOKING CARD -->
+              <div>
+                <div class="booking-card">
+                  <div class="price-tag">${room.pricePerNight.toLocaleString()} ETB <span>/ night</span></div>
+                  
+                  <div class="availability-badge ${isBooked ? 'bg-red' : 'bg-green'}">
+                    ${isBooked ? '<i class="fas fa-times-circle"></i> Fully Booked' : `<i class="fas fa-check-circle"></i> ${room.remainingRooms} of ${room.totalRooms} rooms available`}
+                  </div>
+
+                  <form id="bookingForm">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                      <div><label>Check-In</label><input type="date" id="checkIn" required></div>
+                      <div><label>Check-Out</label><input type="date" id="checkOut" required></div>
+                    </div>
+                    <label>Guests</label>
+                    <input type="number" id="guests" value="1" min="1" max="${room.capacity}">
+                    
+                    <div class="food-section">
+                      <h4>Add Room Service / Food</h4>
+                      <div class="food-menu-list">
+                        ${availableServices.length === 0 ? '<p style="font-size:0.85rem; color:#888;">No extras available.</p>' : 
+                          availableServices.map(s => `
+                            <div class="food-item">
+                              <label>
+                                <input type="checkbox" class="food-checkbox" value="${s._id}|${s.name}|${s.price}" onchange="calculateTotal()">
+                                ${s.name}
+                              </label>
+                              <span class="f-price">+ ${s.price} ETB</span>
+                            </div>
+                          `).join('')
+                        }
+                      </div>
+                    </div>
+
+                    <div class="total-box">
+                      <div class="total-row">
+                        <span>Room (<span id="nightCount">1</span> nights)</span>
+                        <span id="roomTotalDisplay">0 ETB</span>
+                      </div>
+                      <div class="total-row">
+                        <span>Extras</span>
+                        <span id="extrasTotalDisplay">0 ETB</span>
+                      </div>
+                      <div class="total-row grand">
+                        <span>Total</span>
+                        <span id="grandTotalDisplay">0 ETB</span>
+                      </div>
+                    </div>
+
+                    <div style="background:#fafafa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                      <label style="margin-bottom: 0.5rem;">Payment Method</label>
+                      <select id="paymentMethod" required onchange="toggleBankDetails()" style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:8px; margin-bottom:0.5rem;">
+                        <option value="telebirr">Telebirr (Direct)</option>
+                        <option value="cbe">CBE (Direct)</option>
+                        <option value="cash">Cash (Pay at Reception)</option>
+                        <option value="chapa">Chapa (Card / Online)</option>
+                      </select>
+
+                      <div id="bankDetails" style="margin-top: 0.5rem;">
+                        <p style="font-size: 0.8rem; color: #d92424; margin-bottom: 0.5rem;"><strong>Important:</strong> Transfer to our account below, then upload the screenshot.</p>
+                        <p style="font-size: 0.85rem; margin-bottom: 0.8rem; background: #fff; padding: 0.5rem; border-radius: 4px; border: 1px dashed #ccc;">Account: <strong>1000 2345 6789</strong></p>
+                        <input type="text" id="transactionId" placeholder="Transaction / Ref Number" style="font-size:0.9rem;">
+                        <input type="file" id="receiptFile" accept="image/*" style="font-size:0.85rem; padding: 0.3rem; background:#fff;">
+                      </div>
+                    </div>
+
+                    <button type="submit" class="btn-pay" ${isBooked ? 'disabled' : ''}>${isBooked ? 'Fully Booked' : 'Complete Booking'}</button>
+                    <p id="msg" style="text-align:center; margin-top:1rem; font-size:0.9rem; color:#da121a;"></p>
+                  </form>
+                </div>
+              </div>
+
+            </div>
+          `;
+
+          // Setup Dates
+          const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+          const dayAfter = new Date(); dayAfter.setDate(dayAfter.getDate() + 2);
+          const iso = (d) => d.toISOString().split('T')[0];
+          
+          const checkInInput = document.getElementById('checkIn');
+          const checkOutInput = document.getElementById('checkOut');
+          
+          checkInInput.min = iso(tomorrow); checkInInput.value = iso(tomorrow);
+          checkOutInput.min = iso(dayAfter); checkOutInput.value = iso(dayAfter);
+
+          checkInInput.addEventListener('change', calculateTotal);
+          checkOutInput.addEventListener('change', calculateTotal);
+
+          window.toggleBankDetails = () => {
+            const method = document.getElementById('paymentMethod').value;
+            document.getElementById('bankDetails').style.display = (method === 'chapa' || method === 'cash') ? 'none' : 'block';
+          };
+          toggleBankDetails();
+          
+          calculateTotal();
+
+          document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('msg');
+            const method = document.getElementById('paymentMethod').value;
+            msg.style.color = '#333'; msg.textContent = 'Processing...';
+
+            const selectedFood = [];
+            document.querySelectorAll('.food-checkbox:checked').forEach(cb => {
+              const [id, name, price] = cb.value.split('|');
+              selectedFood.push({ serviceId: id, name, price: parseFloat(price), quantity: 1 });
+            });
+
+            const bookingData = {
+              roomId: currentRoom._id,
+              checkIn: checkInInput.value,
+              checkOut: checkOutInput.value,
+              guests: parseInt(document.getElementById('guests').value),
+              selectedFood: selectedFood
+            };
+
+            try {
+              if (method === 'chapa') {
+                const data = await apiFetch('/payments/initialize', { method: 'POST', body: JSON.stringify(bookingData) });
+                if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+              } else {
+                const formData = new FormData();
+                formData.append('roomId', currentRoom._id);
+                formData.append('checkIn', checkInInput.value);
+                formData.append('checkOut', checkOutInput.value);
+                formData.append('guests', document.getElementById('guests').value);
+                formData.append('paymentMethod', method);
+                formData.append('transactionId', document.getElementById('transactionId')?.value || '');
+                formData.append('selectedFood', JSON.stringify(selectedFood));
+                
+                if (method !== 'cash') {
+                  const file = document.getElementById('receiptFile').files[0];
+                  if (!file) throw new Error('Please upload a screenshot');
+                  formData.append('receipt', file);
+                }
+
+                const res = await fetch('/api/bookings/bank-pay', { method: 'POST', credentials: 'include', body: formData });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Failed');
+                
+                msg.style.color = '#078930'; msg.textContent = '✅ Booking submitted! Pending approval.';
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+              }
+            } catch (err) { msg.style.color = '#da121a'; msg.textContent = err.message; }
+          });
+          
+        } catch (err) { box.innerHTML = `<p style="color:red;padding:3rem;text-align:center;">Failed: ${err.message}<br><a href="rooms.html">← Back</a></p>`; }
+      })();
+    }
+
+    function calculateTotal() {
+      if (!currentRoom) return;
+      
+      const checkIn = new Date(document.getElementById('checkIn').value);
+      const checkOut = new Date(document.getElementById('checkOut').value);
+      
+      if (isNaN(checkIn) || isNaN(checkOut)) return;
+      
+      const timeDiff = checkOut.getTime() - checkIn.getTime();
+      nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+      if (nights <= 0) nights = 1;
+      
+      document.getElementById('nightCount').textContent = nights;
+      const roomTotal = currentRoom.pricePerNight * nights;
+      document.getElementById('roomTotalDisplay').textContent = roomTotal.toLocaleString() + ' ETB';
+      
+      let extrasTotal = 0;
+      document.querySelectorAll('.food-checkbox:checked').forEach(cb => {
+        extrasTotal += parseFloat(cb.value.split('|')[2]);
+      });
+      document.getElementById('extrasTotalDisplay').textContent = extrasTotal.toLocaleString() + ' ETB';
+      
+      const grandTotal = roomTotal + extrasTotal;
+      document.getElementById('grandTotalDisplay').textContent = grandTotal.toLocaleString() + ' ETB';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up — Ethio Hotel</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav>
+    <div class="logo"><a href="index.html" style="color:inherit;text-decoration:none">&#127968; Ethio Hotel</a></div>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="rooms.html">Rooms</a></li>
+      <li><a href="login.html">Login</a></li>
+    </ul>
+  </nav>
+
+  <form id="signupForm">
+    <h2>Create Account</h2>
+
+    <input type="text" id="name" name="name" placeholder="Full Name" required>
+    <input type="email" id="email" name="email" placeholder="Email" required>
+    <input type="tel" id="phone" name="phone" placeholder="Phone (e.g. 0912345678)">
+    <input type="password" id="password" name="password" placeholder="Password (min 6)" required minlength="6">
+
+    <button class="btn" type="submit" style="width:100%">Sign Up</button>
+
+    <p id="msg" style="color:red;text-align:center;margin-top:1rem"></p>
+
+    <div class="social-login">
+      <a href="/api/auth/google" class="google-btn">Google</a>
+      <a href="/api/auth/facebook" class="facebook-btn">Facebook</a>
+    </div>
+
+    <p style="text-align:center;margin-top:1rem">Have an account? <a href="login.html">Login</a></p>
+  </form>
+
+  <script src="js/api.js"></script>
+  <script>
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('msg');
+      msg.style.color = 'red';
+      msg.textContent = '';
+
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!name) { msg.textContent = 'Please enter your name'; return; }
+      if (!email) { msg.textContent = 'Please enter your email'; return; }
+      if (password.length < 6) { msg.textContent = 'Password must be at least 6 characters'; return; }
+
+      const btn = e.target.querySelector('button');
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      try {
+        await apiFetch('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ name, email, phone, password })
+        });
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        msg.textContent = err.message;
+        btn.disabled = false;
+        btn.textContent = 'Sign Up';
+      }
+    });
+  </script>
+</body>
+</html>

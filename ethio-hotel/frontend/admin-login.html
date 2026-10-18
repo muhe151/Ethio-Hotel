@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — Ethio Hotel</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background: #0f0f0f; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .admin-login-box {
+      background: #1a1a1a; padding: 3rem; border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5); width: 100%; max-width: 420px;
+      border: 1px solid rgba(201,162,39,0.3); text-align: center;
+    }
+    .admin-login-box h2 { color: #c9a227; font-family: 'Playfair Display', serif; margin-bottom: 0.5rem; font-size: 2rem; }
+    .admin-login-box p { color: #888; margin-bottom: 2rem; font-size: 0.9rem; }
+    .admin-login-box input {
+      background: #2a2a2a; border: 1px solid #444; color: #fff; width: 100%;
+      padding: 1rem; margin-bottom: 1rem; border-radius: 8px; font-size: 1rem;
+    }
+    .admin-login-box input:focus { border-color: #c9a227; outline: none; }
+    .admin-login-box .btn { width: 100%; padding: 1rem; font-size: 1rem; margin-top: 0.5rem; }
+    .error-msg { color: #ff4d4d; font-size: 0.9rem; margin-top: 1rem; min-height: 20px; }
+    .back-link { display: block; margin-top: 2rem; color: #888; text-decoration: none; font-size: 0.85rem; }
+    .back-link:hover { color: #c9a227; }
+  </style>
+</head>
+<body>
+  <div class="admin-login-box">
+    <h2>⚙️ Admin Portal</h2>
+    <p>Restricted access. Authorized personnel only.</p>
+    
+    <form id="adminLoginForm">
+      <input type="email" id="email" placeholder="Admin Email" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button type="submit" class="btn" id="loginBtn">Secure Login</button>
+    </form>
+    
+    <div class="error-msg" id="msg"></div>
+    <a href="index.html" class="back-link">← Return to Main Website</a>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('msg');
+      const btn = document.getElementById('loginBtn');
+      
+      msg.textContent = '';
+      btn.textContent = 'Authenticating...';
+      btn.disabled = true;
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        // 1. Try to login normally
+        const data = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+
+        // 2. Check if the logged-in user is actually an admin
+        if (data.user.role !== 'admin') {
+          // If not admin, log them out immediately and show error
+          await apiFetch('/auth/logout', { method: 'POST' });
+          throw new Error('Access Denied: You are not an administrator.');
+        }
+
+        // 3. Success! Redirect to admin panel
+        msg.style.color = '#078930';
+        msg.textContent = 'Access Granted. Redirecting...';
+        setTimeout(() => { window.location.href = 'admin.html'; }, 800);
+
+      } catch (err) {
+        msg.style.color = '#ff4d4d';
+        msg.textContent = err.message;
+        btn.textContent = 'Secure Login';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

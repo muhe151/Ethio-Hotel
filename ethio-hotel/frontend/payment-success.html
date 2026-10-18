@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><title>Payment Success</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+  <div class="container" style="text-align:center;padding-top:5rem">
+    <h1 style="font-size:3rem">✅</h1>
+    <h2>Payment Successful!</h2>
+    <p style="margin:1rem 0">Your booking is confirmed. Thank you for choosing Ethio Hotel.</p>
+    <a href="dashboard.html" class="btn">View My Bookings</a>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    const txRef = new URLSearchParams(location.search).get('tx_ref');
+    if (txRef) apiFetch(`/payments/verify/${txRef}`).catch(console.error);
+  </script>
+</body>
+</html>
