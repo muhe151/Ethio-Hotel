@@ -35,7 +35,7 @@
     .bg-red { background: #ffe0e0; color: #da121a; }
 
     .booking-card label { font-weight: 600; font-size: 0.85rem; color: #555; display: block; margin-bottom: 0.3rem; }
-    .booking-card input { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem; font-family: inherit; }
+    .booking-card input, .booking-card select { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem; font-family: inherit; }
 
     /* FOOD MENU SECTION */
     .food-section { margin: 2rem 0; border-top: 1px solid #eee; padding-top: 1.5rem; }
@@ -53,6 +53,10 @@
     .btn-pay { width: 100%; padding: 1rem; background: #c9a227; color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.3s; }
     .btn-pay:hover { background: #b08d1a; }
     .btn-pay:disabled { background: #ccc; cursor: not-allowed; }
+
+    /* BANK DETAILS BOX */
+    .bank-info-box { background: #fef9f0; border: 1px dashed #c9a227; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+    .bank-info-box .acc-num { font-size: 1.1rem; font-weight: 700; color: #1a1a1a; margin: 0.3rem 0; letter-spacing: 1px; }
   </style>
 </head>
 <body>
@@ -76,6 +80,16 @@
     let availableServices = [];
     let nights = 1;
 
+    // HOTEL BANK ACCOUNTS - CHANGE THESE TO YOUR REAL ACCOUNTS!
+    const HOTEL_ACCOUNTS = {
+      'telebirr': { name: 'Telebirr', account: '0912 345 678' },
+      'cbe': { name: 'Commercial Bank of Ethiopia (CBE)', account: '1000 2345 6789' },
+      'awash': { name: 'Awash Bank', account: '0132 4567 8901' },
+      'abyssinia': { name: 'Bank of Abyssinia', account: '0456 7890 1234' },
+      'dashen': { name: 'Dashen Bank', account: '0789 1234 5678' },
+      'cbebirr': { name: 'CBE Birr', account: '0911 222 333' }
+    };
+
     if (!id) {
       box.innerHTML = '<p style="padding:3rem;text-align:center;">No room selected. <a href="rooms.html">Browse rooms →</a></p>';
     } else {
@@ -83,12 +97,17 @@
         try {
           const [room, services] = await Promise.all([
             apiFetch('/rooms/' + id),
-            apiFetch('/services')
+            apiFetch('/services').catch(() => [])
           ]);
           
           currentRoom = room;
           availableServices = services;
           const isBooked = room.remainingRooms === 0;
+
+          // Build bank options dynamically
+          const bankOptions = Object.keys(HOTEL_ACCOUNTS).map(key => 
+            `<option value="${key}">${HOTEL_ACCOUNTS[key].name}</option>`
+          ).join('');
 
           box.innerHTML = `
             <div class="room-wrapper">
@@ -158,21 +177,25 @@
                       </div>
                     </div>
 
-                    <div style="background:#fafafa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                      <label style="margin-bottom: 0.5rem;">Payment Method</label>
-                      <select id="paymentMethod" required onchange="toggleBankDetails()" style="width:100%; padding:0.7rem; border:1px solid #ddd; border-radius:8px; margin-bottom:0.5rem;">
-                        <option value="telebirr">Telebirr (Direct)</option>
-                        <option value="cbe">CBE (Direct)</option>
-                        <option value="cash">Cash (Pay at Reception)</option>
-                        <option value="chapa">Chapa (Card / Online)</option>
-                      </select>
+                    <label style="margin-top: 1rem;">Select Bank / Payment Method</label>
+                    <select id="paymentMethod" required onchange="toggleBankDetails()">
+                      ${bankOptions}
+                      <option value="cash">Cash (Pay at Reception)</option>
+                      <option value="chapa">Chapa (Card / Online)</option>
+                    </select>
 
-                      <div id="bankDetails" style="margin-top: 0.5rem;">
-                        <p style="font-size: 0.8rem; color: #d92424; margin-bottom: 0.5rem;"><strong>Important:</strong> Transfer to our account below, then upload the screenshot.</p>
-                        <p style="font-size: 0.85rem; margin-bottom: 0.8rem; background: #fff; padding: 0.5rem; border-radius: 4px; border: 1px dashed #ccc;">Account: <strong>1000 2345 6789</strong></p>
-                        <input type="text" id="transactionId" placeholder="Transaction / Ref Number" style="font-size:0.9rem;">
-                        <input type="file" id="receiptFile" accept="image/*" style="font-size:0.85rem; padding: 0.3rem; background:#fff;">
-                      </div>
+                    <!-- DYNAMIC BANK DETAILS BOX -->
+                    <div id="bankDetails" class="bank-info-box">
+                      <p style="font-size: 0.85rem; color: #d92424; margin-bottom: 0.5rem;"><strong>Important:</strong> Transfer to this account, then upload the screenshot below.</p>
+                      <div id="accountNameDisplay" style="font-size: 0.85rem; color: #666;">Bank Name</div>
+                      <div id="accountNumberDisplay" class="acc-num">0000 0000 0000</div>
+                      <div style="font-size: 0.75rem; color: #888;">Account Holder: Ethio Hotel</div>
+                      
+                      <label style="margin-top: 0.8rem;">Transaction / Reference Number</label>
+                      <input type="text" id="transactionId" placeholder="e.g. FT12345678" style="font-size:0.9rem; background:#fff;">
+                      
+                      <label>Upload Payment Screenshot</label>
+                      <input type="file" id="receiptFile" accept="image/*" style="font-size:0.85rem; padding: 0.3rem; background:#fff;">
                     </div>
 
                     <button type="submit" class="btn-pay" ${isBooked ? 'disabled' : ''}>${isBooked ? 'Fully Booked' : 'Complete Booking'}</button>
@@ -198,14 +221,28 @@
           checkInInput.addEventListener('change', calculateTotal);
           checkOutInput.addEventListener('change', calculateTotal);
 
+          // DYNAMIC BANK DETAILS FUNCTION
           window.toggleBankDetails = () => {
             const method = document.getElementById('paymentMethod').value;
-            document.getElementById('bankDetails').style.display = (method === 'chapa' || method === 'cash') ? 'none' : 'block';
+            const bankDetails = document.getElementById('bankDetails');
+            
+            if (method === 'chapa' || method === 'cash') {
+              bankDetails.style.display = 'none';
+            } else {
+              bankDetails.style.display = 'block';
+              const bank = HOTEL_ACCOUNTS[method];
+              if (bank) {
+                document.getElementById('accountNameDisplay').textContent = bank.name;
+                document.getElementById('accountNumberDisplay').textContent = bank.account;
+              }
+            }
           };
-          toggleBankDetails();
           
+          // Initialize
+          toggleBankDetails();
           calculateTotal();
 
+          // SUBMIT FORM
           document.getElementById('bookingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const msg = document.getElementById('msg');
@@ -228,29 +265,31 @@
 
             try {
               if (method === 'chapa') {
+                // CHAPA ONLINE PAYMENT
                 const data = await apiFetch('/payments/initialize', { method: 'POST', body: JSON.stringify(bookingData) });
                 if (data.checkoutUrl) window.location.href = data.checkoutUrl;
               } else {
+                // BANK TRANSFER OR CASH
                 const formData = new FormData();
                 formData.append('roomId', currentRoom._id);
                 formData.append('checkIn', checkInInput.value);
                 formData.append('checkOut', checkOutInput.value);
                 formData.append('guests', document.getElementById('guests').value);
                 formData.append('paymentMethod', method);
-                formData.append('transactionId', document.getElementById('transactionId')?.value || '');
+                formData.append('transactionId', document.getElementById('transactionId')?.value || 'CASH');
                 formData.append('selectedFood', JSON.stringify(selectedFood));
                 
                 if (method !== 'cash') {
                   const file = document.getElementById('receiptFile').files[0];
-                  if (!file) throw new Error('Please upload a screenshot');
+                  if (!file) throw new Error('Please upload a payment screenshot');
                   formData.append('receipt', file);
                 }
 
                 const res = await fetch('/api/bookings/bank-pay', { method: 'POST', credentials: 'include', body: formData });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'Failed');
+                if (!res.ok) throw new Error(data.message || 'Failed to submit');
                 
-                msg.style.color = '#078930'; msg.textContent = '✅ Booking submitted! Pending approval.';
+                msg.style.color = '#078930'; msg.textContent = '✅ Booking submitted! Pending admin approval.';
                 setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
               }
             } catch (err) { msg.style.color = '#da121a'; msg.textContent = err.message; }
